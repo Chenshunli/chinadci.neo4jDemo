@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chinadci.neo4j.mapper.GraphdbMapper">
+
+    <!--获取实体列表-->
+    <select id="getNodeList" resultType="com.chinadci.neo4j.dto.GraphNodeDTO">
+        select ${node} as id,${field} as keyValue from ${tableName}
+    </select>
+
+    <!--插入关系记录-->
+    <insert id="insertRelevant" parameterType="com.chinadci.neo4j.dao.Relevant" useGeneratedKeys="true" keyProperty="id">
+        insert into relevant_copy1(type1,content1,type2,content2,intensity,rela,direction)
+        values(#{type1},#{content1},#{type2},#{content2},#{intensity},#{rela},#{direction})
+    </insert>
+
+    <select id="getIndexDataInfo" resultType="java.util.Map">
+        select id,name,displayname from index_wh order by id
+    </select>
+
+    <select id="getDataInfo" resultType="java.util.Map">
+        select id,name,displayname from ${table} order by id
+    </select>
+
+    <select id="getIndexWh" resultType="com.chinadci.neo4j.dao.IndexWh">
+        select * from index_wh order by id
+    </select>
+
+    <select id="getNodeFromDb" resultType="com.chinadci.neo4j.dto.DataNodeDTO">
+        select * from ${table} order by id
+    </select>
+
+    <select id="getDataRelationFromDb" resultType="com.chinadci.neo4j.dao.Relevant">
+        select
+    </select>
+
+</mapper>
