@@ -1,34 +1,23 @@
 package com.chinadci.neo4j.dao.entity;
 
-
 import lombok.Data;
+
 import org.neo4j.ogm.annotation.NodeEntity;
-import org.springframework.data.neo4j.core.schema.GeneratedValue;
 import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Property;
 
-/**
- * 图数据库通用实体类
- */
 @Data
 @NodeEntity
-public class Node {
+public class Noun {
     @Id
-    @GeneratedValue
     private Long id;
     @Property
-    private String name;
-    @Property
     private String displayname;
+    @Property
+    private String description;
+    @Property
+    private String tags;
 
-
-    public String getDisplayname() {
-        return displayname;
-    }
-
-    public void setDisplayname(String displayname) {
-        this.displayname = displayname;
-    }
 
     public Long getId() {
         return id;
@@ -38,11 +27,27 @@ public class Node {
         this.id = id;
     }
 
-    public String getName() {
-        return name;
+    public String getDisplayname() {
+        return displayname;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setDisplayname(String displayname) {
+        this.displayname = displayname;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getTags() {
+        return tags;
+    }
+
+    public void setTags(String tags) {
+        this.tags = tags;
     }
 }

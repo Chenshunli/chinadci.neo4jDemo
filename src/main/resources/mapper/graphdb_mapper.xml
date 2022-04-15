@@ -19,7 +19,7 @@
     </select>
 
     <select id="getDataInfo" resultType="java.util.Map">
-        select id,name,displayname from ${table} order by id
+        select id, displayname from ${table} order by id
     </select>
 
     <select id="getIndexWh" resultType="com.chinadci.neo4j.dao.IndexWh">
@@ -32,6 +32,10 @@
 
     <select id="getDataRelationFromDb" resultType="com.chinadci.neo4j.dao.Relevant">
         select
+    </select>
+
+    <select id="getEntityNouns" resultType="com.chinadci.neo4j.dao.EntityNoun">
+        select * from entity_noun
     </select>
 
 </mapper>

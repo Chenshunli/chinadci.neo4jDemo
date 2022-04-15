@@ -8,19 +8,12 @@ import java.util.Map;
  */
 public class GraphDataDTO {
     //    节点名称
-    private String name;
+//    private String name;
     //    节点属性列表
     private List<String> properties;
     //    节点属性值列表
     private Map<String,Object> propertyValues;
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
 
     public List<String> getProperties() {
         return properties;

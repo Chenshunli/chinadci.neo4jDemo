@@ -1,16 +1,15 @@
 package com.chinadci.neo4j.service;
 
+import com.chinadci.neo4j.dao.EntityNoun;
 import com.chinadci.neo4j.dao.IndexWh;
 import com.chinadci.neo4j.dao.Relevant;
 import com.chinadci.neo4j.dao.ServiceResult;
-import com.chinadci.neo4j.dao.entity.Index;
-import com.chinadci.neo4j.dao.entity.Person;
-import com.chinadci.neo4j.dao.entity.PersonRelationShip;
+import com.chinadci.neo4j.dao.entity.*;
 import com.chinadci.neo4j.dao.repository.*;
-import com.chinadci.neo4j.dto.DataNodeDTO;
 import com.chinadci.neo4j.dto.GraphDataDTO;
 import com.chinadci.neo4j.dto.GraphNodeDTO;
 import com.chinadci.neo4j.mapper.GraphdbMapper;
+import com.chinadci.neo4j.utils.AppUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.stereotype.Service;
@@ -21,7 +20,7 @@ import java.util.*;
 public class GraphDbService {
 
     @Autowired
-    PersonRelationShipRepository personRelationShipRepository;
+    RelationShipRepository relationShipRepository;
     @Autowired
     NodeRepository nodeRepository;
     @Autowired
@@ -32,22 +31,28 @@ public class GraphDbService {
     GraphdbMapper graphdbMapper;
     @Autowired
     IndexRepository indexRepository;
+    @Autowired
+    PolicyRepository policyRepository;
+    @Autowired
+    NounRepository nounRepository;
+    @Autowired
+    AppUtil appUtil;
 
     /**
      * 图数据库中节点查询测试
      * @param ids
      * @return
      */
-    public List<Person> findNodes(String label,List<Long> ids){
-        List<Person> byId  = new ArrayList<>();
-        List idList = new ArrayList();
-//        idList.add(1);
-//        Iterable<Long> ids = idList;
-        Neo4jRepository neo4jRepository = getRepository(label);
-//        byId = personRepository.findAllById(ids);
-        byId = neo4jRepository.findAllById(ids);
-        byId.get(0);
-        return byId;
+    public List findNodes(String label,List<Long> ids){
+        List  res  = new ArrayList<>();
+        String beanName = label+"Repository";
+        Neo4jRepository neo4jRepository = (Neo4jRepository) appUtil.getBean(beanName);
+        if(ids!=null&&ids.size()>0){
+            res = neo4jRepository.findAllById(ids);
+//            byId.get(0);
+        }
+        else res = neo4jRepository.findAll();
+        return res;
     }
 
 
@@ -68,27 +73,15 @@ public class GraphDbService {
             case "index":
                 repository = indexRepository;
                 break;
+            case "policy":
+                repository = policyRepository;
+                break;
+            case "noun":
+                repository = nounRepository;
         }
         return repository;
     }
 
-
-    /***
-     * 图数据库中节点查询
-     *
-     */
-    public ServiceResult getData(String labelName){
-        List res = new ArrayList();
-        try{
-            Neo4jRepository neo4jRepository = getRepository(labelName);
-//            List resList = Collections.singletonList(indexRepository.findAll());
-            List resList = Collections.singletonList(neo4jRepository.findAll());
-            res.addAll((Collection) resList.get(0));
-        }catch (Exception e){
-            res.add(e.getMessage());
-        }
-        return new ServiceResult(res);
-    }
 
     /**
      * 通过关系数据库创建数据关联关系
@@ -143,8 +136,10 @@ public class GraphDbService {
         List res = new ArrayList();
         try{
             Object node = new Object();
+            String beanName = label+"Repository";
             node = getNode(label,graphDataDTO);
-            Neo4jRepository neo4jRepository = getRepository(label);
+//            Neo4jRepository neo4jRepository = getRepository(label);
+            Neo4jRepository neo4jRepository = (Neo4jRepository) appUtil.getBean(beanName);
             neo4jRepository.save(node);
             res.add(node);
         }catch (Exception e){
@@ -173,40 +168,21 @@ public class GraphDbService {
                 node = person;
                 break;
             case "index":
-                String objId = (String) properties.get("objId");
-                String displayName = (String) properties.get("displayName");
-                Index index = new Index(objId,displayName,name);
+                Index index = new Index();
+                index.setId((Long) properties.get("id"));
+                index.setName((String) properties.get("name"));
                 node = index;
+                break;
+            case "noun":
+                Noun noun = new Noun();
+                noun.setId((Long) properties.get("id"));
+                noun.setDisplayname((String) properties.get("displayName"));
+                node = noun;
                 break;
         }
         return node;
     }
 
-    /**
-     * 图数据库中数据创建
-     * 从数据库导入数据到图数据库
-     * @return
-     */
-    public ServiceResult pgToGraphDatabase1(String label,String tableName){
-        List res = new ArrayList();
-        try{
-            List<Index> indices = new ArrayList<>();
-            List<IndexWh> indexWhList = graphdbMapper.getIndexWh();
-            List<Map<String,Object>> mapList = graphdbMapper.getIndexDataInfo();
-            for (Map<String,Object> obj:mapList){
-//                IndexNode indexNode1 =
-                Index index = new Index(obj.get("id").toString(),String.valueOf(obj.get("displayname")),obj.get("name").toString());
-                indices.add(index);
-                indexRepository.save(index);
-                res.add(index);
-            }
-//            indexRepository.saveAll(indexNodes);
-//            indexRepository.saveAll(indexNodes);
-        }catch (Exception e){
-            res.add(e.getMessage());
-        }
-        return new ServiceResult(res);
-    }
 
     /**
      * 图数据库中数据创建
@@ -214,40 +190,80 @@ public class GraphDbService {
      * @return
      */
     public ServiceResult pgToGraphDatabase(String label,String tableName){
+
         List res = new ArrayList();
+        String beanName = label+"Repository";
         try{
-            Neo4jRepository neo4jRepository = getRepository(label);
-            List<Index> indices = new ArrayList<>();
-            List<DataNodeDTO> dataList = graphdbMapper.getNodeFromDb(tableName);
-//            List<IndexWh> indexWhList = graphdbMapper.getIndexWh();
-            List<Map<String,Object>> mapList = graphdbMapper.getDataInfo(tableName);
-            for (Map<String,Object> obj:mapList){
-//                IndexNode indexNode1 =
-                Index index = new Index(obj.get("id").toString(),String.valueOf(obj.get("displayname")),obj.get("name").toString());
-                indices.add(index);
-                neo4jRepository.save(index);
-                res.add(index);
+            Neo4jRepository neo4jRepository = (Neo4jRepository) appUtil.getBean(beanName);
+            if(tableName.equals("entity_noun")){
+                List<EntityNoun> entityNouns = graphdbMapper.getEntityNouns();
+                for (EntityNoun entityNoun:entityNouns){
+                    Noun noun = (Noun) objToEntity(entityNoun,"noun");
+//                    Noun noun = new Noun();
+//                    noun.setDescription(entityNoun.getDiscription());
+//                    noun.setDisplayname(entityNoun.getDisplayName());
+//                    noun.setId(entityNoun.getId());
+//                    noun.setTags(entityNoun.getTags());
+                    nounRepository.save(noun);
+                    res.add(noun);
+                }
             }
-//            indexRepository.saveAll(indexNodes);
-//            indexRepository.saveAll(indexNodes);
+            else if(tableName.equals("index")){
+                List<IndexWh> indexWhList = graphdbMapper.getIndexWh();
+                for (IndexWh indexWh: indexWhList){
+                    Index index = (Index) objToEntity(indexWh,"index");
+                    indexRepository.save(index);
+                }
+            }
+
         }catch (Exception e){
             res.add(e.getMessage());
         }
         return new ServiceResult(res);
     }
 
+    /**
+     * 关系数据库中数据转为图数据库实体
+     * @param obj
+     * @param entityClass
+     * @return
+     */
+    private Object objToEntity(Object obj,String entityClass){
+        Object entity = new Object();
+        switch (entityClass){
+            case "noun":
+                EntityNoun entityNoun = (EntityNoun) obj;
+                Noun noun = new Noun();
+                noun.setDescription(entityNoun.getDiscription());
+                noun.setDisplayname(entityNoun.getDisplayName());
+                noun.setId(entityNoun.getId());
+                noun.setTags(entityNoun.getTags());
+                entity = noun;
+                break;
+            case "index":
+                IndexWh indexWh = new IndexWh();
+                Index index = new Index();
+                index.setObjId(indexWh.getId());
+                index.setName(indexWh.getName());
+                index.setDisplayname(indexWh.getDisplayname());
+                entity = index;
+                break;
+        }
+        return entity;
+    }
+
 
     /**
      * 图数据库关系创建1：自定义
-     * @param nodeLabel1
+     * @param
      * @param startNode
-     * @param nodeLabel2
+     * @param
      * @param endNode
      * @param relationLabel
      * @param relation
      * @return
      */
-    public ServiceResult createRelationShip(String nodeLabel1,String startNode,String nodeLabel2,String endNode,
+    public ServiceResult createRelationShip(String startLabel,String startNode,String endLabel,String endNode,
                                             String relationLabel,String relation){
         List res = new ArrayList();
         try{
@@ -265,7 +281,10 @@ public class GraphDbService {
             String from = startNode;
             String to = endNode;
 //            自写方法创建关系：成功！
+            relationShipRepository.createRelation(from,relation,to);
             personRepository.createRelation(from,relation,to);
+            //方式三：选择使用该方法
+            nodeRepository.createRSByName(startLabel,startNode,endLabel,endNode,relationLabel,relation);
             res.add(startNode);
         }catch (Exception e){
 
@@ -292,7 +311,7 @@ public class GraphDbService {
                 String startLabel = relevant.getType1();
                 String endLabel = relevant.getType2();
                 String relation = relevant.getRela();
-                nodeRepository.creatrRS(startLabel,start,endLabel,end,relationLabel,relation);
+                nodeRepository.createRSById(startLabel,start,endLabel,end,relationLabel,relation);
 //                personRepository.creatrRS(startLabel,start,endLabel,end,relationLabel,relation);
             }
             return new ServiceResult(relevantList);
@@ -300,6 +319,7 @@ public class GraphDbService {
             return new ServiceResult(ServiceResult.ServiceErrorCode.UNKNOWN_ERROR, e.getMessage());
         }
     }
+
 
     public ServiceResult createRSTest(String nodeLabel1,String nodeLabel2,
                                   String relationLabel,String relationTable){
@@ -351,6 +371,14 @@ public class GraphDbService {
 //        删除某类节点，以及它存在的所有关系
         Neo4jRepository neo4jRepository = getRepository(label);
         neo4jRepository.deleteAll();
+        return new ServiceResult(res);
+    }
+
+    public ServiceResult getData(String labelName,Long id,Integer depth){
+        List res = new ArrayList();
+        String beanName = labelName+"Repository";
+        Neo4jRepository neo4jRepository = (Neo4jRepository) appUtil.getBean(beanName);
+
         return new ServiceResult(res);
     }
 

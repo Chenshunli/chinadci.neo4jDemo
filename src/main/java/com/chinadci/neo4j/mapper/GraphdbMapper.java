@@ -1,6 +1,8 @@
 package com.chinadci.neo4j.mapper;
 
 
+import com.chinadci.neo4j.dao.EntityNoun;
+import com.chinadci.neo4j.dao.entity.Noun;
 import com.chinadci.neo4j.dto.DataNodeDTO;
 import com.chinadci.neo4j.dto.GraphNodeDTO;
 import com.chinadci.neo4j.dao.IndexWh;
@@ -42,5 +44,5 @@ public interface GraphdbMapper {
 
     List<Relevant> getDataRelationFromDb(@Param("node1")String node1,@Param("node2")String node2,@Param("table") String relTable);
 
-
+    List<EntityNoun> getEntityNouns();
 }

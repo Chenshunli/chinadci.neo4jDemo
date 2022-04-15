@@ -5,11 +5,8 @@ import org.neo4j.ogm.annotation.NodeEntity;
 import org.springframework.data.neo4j.core.schema.GeneratedValue;
 import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Property;
-import org.springframework.data.neo4j.core.schema.Relationship;
 
 import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Set;
 
 
 /**
@@ -26,13 +23,13 @@ public class Index implements Serializable {
     private String name;
 
     private String displayname;
-    private String objId;
+    private Long objId;
 
-    public Index(String objId, String name, String displayname) {
-        this.name = name;
-        this.displayname = displayname;
-        this.objId = objId;
-    }
+//    public Index(Long objId, String name, String displayname) {
+//        this.name = name;
+//        this.displayname = displayname;
+//        this.objId = objId;
+//    }
 
     public Long getId() {
         return id;
@@ -58,11 +55,11 @@ public class Index implements Serializable {
         this.displayname = displayname;
     }
 
-    public String getObjId() {
+    public Long getObjId() {
         return objId;
     }
 
-    public void setObjId(String objId) {
+    public void setObjId(Long objId) {
         this.objId = objId;
     }
 }
